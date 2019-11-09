@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="291" height="56" viewBox="0 0 291 56">
+  <g id="login_button" transform="translate(-35 -433)">
+    <rect id="bg_button" width="291" height="56" rx="28" transform="translate(35 433)" fill="#55efc4"/>
+    <text id="LOGIN" transform="translate(158 468)" fill="rgba(255,255,255,0.97)" font-size="16" font-family="SegoeUI, Segoe UI"><tspan x="0" y="0">LOGIN</tspan></text>
+  </g>
+</svg>

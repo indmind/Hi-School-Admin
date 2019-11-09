@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title></title>
+    <link href="https://fonts.googleapis.com/css?family=Schoolbell&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="styles/login.css" />
+  </head>
+  <body>
+    <div class="formlogin">
+      <h1>H! School</h1>
+
+      <form id="login-form">
+        <div class="login">
+          <input type="email" name="email" placeholder="Email" id="inpEmail" required /><br /><br />
+          <input type="password" name="pass" placeholder="Kata Sandi" id="inpPassword" required /><br /><br />
+          <input type="submit" name="masuk" value="Login" id="btnLogin" />
+        </div>
+      </form>
+    </div>
+
+    <script defer src="/__/firebase/7.2.0/firebase-app.js"></script>
+    <script defer src="/__/firebase/7.2.0/firebase-auth.js"></script>
+    <script defer src="/__/firebase/7.2.0/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/init.js"></script>
+
+    <script
+      src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+      crossorigin="anonymous"
+    ></script>
+
+    <script>
+      $(document).ready(() => {
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        $("#login-form").submit(async e => {
+          e.preventDefault();
+
+          const email = $("#inpEmail").val();
+          const password = $("#inpPassword").val();
+
+          try {
+            const authResult = await auth.signInWithEmailAndPassword(email, password);
+
+            const adminDoc = await db
+              .collection("school_admins")
+              .doc(authResult.user.uid)
+              .get();
+
+            if (!adminDoc.exists) return alert("Email tidak terdaftar / bukan administrator!");
+
+            const admin = adminDoc.data()
+
+            // save data to local storage for faster access
+            localStorage.setItem("adminData", JSON.stringify(admin))
+
+            // change location based on user division
+            switch(admin.division) {
+              case "sarpras":
+                return location.href = "laporan.html"
+            }
+
+          } catch (error) {
+            console.log(error);
+
+            switch (error.code) {
+              case "auth/user-not-found":
+                alert("Email tidak terdaftar / bukan administrator!");
+                break;
+              case "auth/wrong-password":
+                alert("Password salah!");
+                break;
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

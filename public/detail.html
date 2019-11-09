@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Laporan</title>
+
+    <script src="https://kit.fontawesome.com/0741d250de.js" crossorigin="anonymous"></script>
+
+    <style>
+      @import url("https://fonts.googleapis.com/css?family=Open+Sans&display=swap");
+
+      * {
+        font-family: "Open Sans", cursive;
+      }
+
+      h1 {
+        color: rgba(0, 0, 0, 0.7);
+        text-align: center;
+        font-weight: bold;
+        font-size: 50px;
+        margin: 40px;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 12px, 20px;
+        margin: 8px 0;
+        border: white;
+        border: 1px solid #000;
+        border-left: 0 none;
+        border-right: 0 none;
+      }
+
+      .report-box {
+        border: none;
+        border-radius: 20px;
+        width: 250px;
+        padding: 20px;
+        margin: 10px;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+        cursor: pointer;
+        transition: 300ms ease-in-out;
+      }
+
+      .report-img {
+        border: none;
+        display: inline;
+        border-radius: 20px;
+        width: 100%;
+        height: 250px;
+        background-position: center center;
+        background-repeat: no-repeat;
+        object-fit: cover;
+      }
+
+      .report-box p,
+      .report-box h3 {
+        font-size: 20px;
+        color: grey;
+        margin: 10px 0 0 0;
+      }
+
+      .report-box small {
+        color: grey;
+      }
+
+      #report-container {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .menu-opt div {
+        cursor: pointer;
+        text-align: center;
+        border-radius: 10px;
+        width: 60px;
+        height: 60px;
+        color: white;
+        margin: 20px 0;
+        transition: 100ms ease-in;
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+      }
+
+      .menu-opt div > i {
+        font-size: 30px;
+        margin-top: 15px;
+      }
+
+      .menu-opt div:hover {
+        transform: scale(1.1);
+      }
+
+      .menu-opt div:active {
+        transform: scale(1);
+      }
+
+      .menu-opt .solved {
+        background-color: #1dd1a1;
+      }
+
+      .menu-opt .unsolved {
+        background-color: #feca57;
+      }
+
+      .menu-opt .rejected {
+        background-color: #ff6b6b;
+      }
+
+      .disabled {
+        pointer-events: none;
+        position: relative;
+      }
+
+      .disabled::after {
+        content: "";
+        border-radius: 100px;
+        position: absolute;
+        border-style: solid;
+        border-color: #222f3e;
+        background-color: #222f3e;
+      }
+
+      @media screen and (min-width: 576px) {
+        .disabled::after {
+          right: -12px;
+          width: 1px;
+          height: 80%;
+          top: 5%;
+        }
+      }
+
+      @media screen and (max-width: 575px) {
+        .menu-opt {
+          width: 250px;
+          display: grid;
+          grid-template: "1fr 1fr 1fr";
+        }
+
+        .menu-opt div {
+          margin: 10px auto;
+        }
+
+        .disabled::after {
+          bottom: -12px;
+          width: 80%;
+          height: 1px;
+          left: 5%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Detail Laporan</h1>
+
+    <div id="report-container">
+      <div class="menu-opt right">
+        <div class="solved" id="solve"><i class="fas fa-thumbs-up"></i></div>
+        <div class="unsolved" id="reject"><i class="fas fa-thumbs-down"></i></div>
+        <div class="rejected" id="delete"><i class="fas fa-times"></i></div>
+      </div>
+    </div>
+
+    <div id="ext-scripts">
+      <script defer src="/__/firebase/7.2.0/firebase-app.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-auth.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-firestore.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-messaging.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-storage.js"></script>
+      <script defer src="/__/firebase/init.js"></script>
+
+      <script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"
+      ></script>
+
+      <script src="./scripts/main.js"></script>
+    </div>
+
+    <script>
+      async function created(admin, adminData) {
+        const reportId = getParam("report");
+
+        if (!reportId) location.href = "laporan.html";
+
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        const report = (await db
+          .collection("reports")
+          .doc(reportId)
+          .get()).data();
+
+        setStatus(report.status);
+
+        const user = (await db
+          .collection("users")
+          .doc(report["userId"])
+          .get()).data();
+
+        let image;
+
+        try {
+          image = await storage.ref(`images/${report["reportId"]}.jpg`).getDownloadURL();
+        } catch (e) {
+          image = "https://www.tahilalats.com/img/loading-gif-2.gif";
+        }
+        
+        $("#report-container").prepend(
+          `<div class="report-box">
+                <img class="report-img" src="${image}" alt="Gambar Laporan"/>
+                  <h3>${user["fullName"]}</h3>
+                  <small>${report["timestamp"].toDate().toLocaleDateString("id-ID")}</small>
+                <p>${report["description"].trunc(50)}</p>
+            </div>`
+        );
+
+        $("#solve").click(() => {
+          console.log("updating solv");
+          db.collection("reports")
+            .doc(reportId)
+            .update({ status: "solved" })
+            .then(() => {
+              setStatus("solved");
+            });
+        });
+
+        $("#reject").click(() => {
+          console.log("updating reject");
+          db.collection("reports")
+            .doc(reportId)
+            .update({ status: "rejected" })
+            .then(() => {
+              setStatus("rejected");
+            });
+        });
+
+        $("#delete").click(() => {
+          console.log("deleting");
+          db.collection("reports")
+            .doc(reportId)
+            .delete({ status: "rejected" })
+            .then(() => {
+              console.log("deleted");
+            });
+        });
+
+        function setStatus(status) {
+          if (status === "solved") {
+            $("#solve").addClass("disabled");
+            return $("#reject").removeClass("disabled");
+          } else if (status == "rejected") {
+            $("#solve").removeClass("disabled");
+            return $("#reject").addClass("disabled");
+          }
+
+          $("#solve").removeClass("disabled");
+          $("#reject").removeClass("disabled");
+        }
+      }
+    </script>
+  </body>
+</html>
