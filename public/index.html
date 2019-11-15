@@ -11,7 +11,7 @@
     <div class="formlogin">
       <h1>H! School</h1>
 
-      <form id="login-form">
+      <form id="login-form" method="post">
         <div class="login">
           <input type="email" name="email" placeholder="Email" id="inpEmail" required /><br /><br />
           <input type="password" name="pass" placeholder="Kata Sandi" id="inpPassword" required /><br /><br />
@@ -52,17 +52,21 @@
 
             if (!adminDoc.exists) return alert("Email tidak terdaftar / bukan administrator!");
 
-            const admin = adminDoc.data()
+            const admin = adminDoc.data();
 
             // save data to local storage for faster access
-            localStorage.setItem("adminData", JSON.stringify(admin))
+            localStorage.setItem("adminData", JSON.stringify(admin));
 
             // change location based on user division
-            switch(admin.division) {
+            switch (admin.division) {
               case "sarpras":
-                return location.href = "laporan.html"
+              case "kesiswaan":
+                return (location.href = "laporan.html");
+              case "humas":
+                return (location.href = "berita.html");
+              default:
+                alert(admin.division);
             }
-
           } catch (error) {
             console.log(error);
 

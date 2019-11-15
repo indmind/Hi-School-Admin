@@ -1,18 +1,104 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title></title>
-	<link rel="stylesheet" href="style.css"/>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Berita</title>
 
-	
-</head>
-<body>
-	<h1>UPLOAD BERITA</h1>
-	<form class="formbox">
-		<textarea placeholder="Masukan deskripsi..." cols="40" rows="10" id="des"></textarea>
-	<input type="file" name="gambar" id="gbr" value="+" accept="image/x-png,image/gif,image/jpeg" multiple>	
-	<input type="button" name="kirim" id="krm" value="Kirim" class="btn">
-	</form>
+    <link rel="stylesheet" href="styles/berita.css" />
+  </head>
+  <body>
+    <h1>UPLOAD BERITA</h1>
 
-</body>
+    <div class="container">
+      <form class="formbox" id="create-news-form">
+        <textarea placeholder="Masukan berita..." cols="40" rows="10" class="text-area" id="des"></textarea>
+        <br />
+        <input type="submit" name="kirim" id="krm" value="Kirim" class="btn" />
+      </form>
+
+      <div id="news-list" class="news-list"></div>
+    </div>
+
+    <div id="ext-scripts">
+      <script defer src="/__/firebase/7.2.0/firebase-app.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-auth.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-firestore.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-messaging.js"></script>
+      <script defer src="/__/firebase/7.2.0/firebase-storage.js"></script>
+      <script defer src="/__/firebase/init.js"></script>
+
+      <script
+        src="https://code.jquery.com/jquery-3.4.1.min.js"
+        integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+        crossorigin="anonymous"
+      ></script>
+
+      <script src="./scripts/main.js"></script>
+    </div>
+
+    <script>
+      const capitalize = s => {
+        if (typeof s !== "string") return "";
+        return s.charAt(0).toUpperCase() + s.slice(1);
+      };
+
+      async function created(admin, adminData) {
+        const db = firebase.firestore();
+
+        $("#create-news-form").submit(async e => {
+          e.preventDefault()
+
+          const news = $("#des").val()
+
+          if(!news.length) {
+            alert("Harap isi berita...")
+          }
+
+          const newNews = {
+            adminId: admin.uid,
+            news: news,
+            publishTime: firebase.firestore.FieldValue.serverTimestamp(),
+            schoolId: adminData.schoolId
+          }
+
+          db.collection("news").add(newNews).then(() => {
+            $("#news-list").prepend(
+            `<div class="news-container">
+              <h3>${capitalize(adminData.division)}</h3>
+              <small>${new Date().toLocaleDateString()}</small>
+              <p>${news}</p>
+            </div>`
+          );
+          })
+        })
+
+        loadNews(db)
+      }
+
+      async function loadNews(db) {
+        const news = await db.collection("news").orderBy("publishTime", "desc").limit(5).get();
+
+        $("#news-list").html("")
+
+        for (let newsDoc of news.docs) {
+          console.log(newsDoc);
+          const newsItem = newsDoc.data();
+          const poster = (await db
+            .collection("school_admins")
+            .doc(newsItem.adminId)
+            .get()).data();
+
+          $("#news-list").append(
+            `<div class="news-container">
+              <h3>${capitalize(poster.division)}</h3>
+              <small>${newsItem.publishTime.toDate().toLocaleDateString()}</small>
+              <p>${newsItem.news}</p>
+            </div>`
+          );
+        }
+      }
+    </script>
+  </body>
 </html>
